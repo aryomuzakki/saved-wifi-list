@@ -15,7 +15,7 @@ try {
     return {
       name: wifi.name,
       value: wifi,
-      description: "Password: " + wifi.password,
+      description: "Password: " + (wifi?.password || ""),
     }
   })
 
@@ -29,25 +29,24 @@ try {
 
         return wifiData.filter((data) => data.name.toLowerCase().includes(input));
       } catch (err) {
-        console.log("\nfunction error!");
         console.log(err.message);
         process.exit(1);
       }
     },
   }).then((selectedWifi) => {
 
-    console.log(`WIFI: ${selectedWifi.name}\nPassword: ${selectedWifi.password}`);
+    console.log(`WIFI: ${selectedWifi.name}\nPassword: ${selectedWifi?.password || ""}`);
 
-    clipboard.write(selectedWifi.password).then(() => console.log("Password copied to clipboard!"));
+    if (selectedWifi.password) {
+      clipboard.write(selectedWifi.password).then(() => console.log("Password copied to clipboard!"));
+    }
 
   }).catch((err) => {
-    if (!err.message.toLowerCase().includes("user force closed the prompt")) {
-      console.log("inquirer error");
+    if (!err.message.toLowerCase().includes("user force closed the prompt with 0 null")) {
       console.log(err.message);
     }
   });
 
 } catch (err) {
-  console.log("\nfunction error!");
   console.log(err.message);
 }
