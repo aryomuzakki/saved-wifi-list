@@ -1,39 +1,35 @@
 "use strict";
 
-import wifiName from "wifi-name";
+let platformLib;
 
-const getWifiNames = async () => {
-	let fn = (await import("./lib/linux.js")).getWifiNames;
-
-	if (process.platform === "darwin") {
-		fn = (await import("./lib/osx.js")).getWifiNames;
-	}
-
-	if (process.platform === "win32") {
-		fn = (await import("./lib/win.js")).getWifiNames;
-	}
-
-	return await fn();
+if (process.platform === "win32") {
+	platformLib = (await import("./lib/win.js"));
+} else if (process.platform === "darwin") {
+	platformLib = (await import("./lib/osx.js"));
+} else {
+	platformLib = (await import("./lib/linux.js"));
 }
 
-export const getWifiPass = async (ssid) => {
-	let fn = (await import("./lib/linux.js")).default;
+export const currentWifiName = async () => {
+	return await platformLib.currentWifiName();
+}
 
-	if (process.platform === "darwin") {
-		fn = (await import("./lib/osx.js")).default;
-	}
+export const getWifiNames = async () => {
+	return await platformLib.getWifiNames();
+}
 
-	if (process.platform === "win32") {
-		fn = (await import("./lib/win.js")).default;
-	}
-
+export const getWifiPassword = async (ssid) => {
 	if (ssid) {
-		return fn(ssid);
+		return platformLib.getWifiPassword(ssid);
 	}
 
-	const wifiSSID = await wifiName();
+	const wifiSSID = await currentWifiName();
 
-	return await fn(wifiSSID);
+	return await platformLib.getWifiPassword(wifiSSID);
 }
 
-export default getWifiNames;
+const savedWifiList = async () => {
+	return await platformLib.default();
+}
+
+export default savedWifiList;

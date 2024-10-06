@@ -1,39 +1,26 @@
-"use strict"
+#!/usr/bin/env node
+
+"use strict";
 
 import search from "@inquirer/search";
-import wifiName from "wifi-name";
-import getWifiNames, { getWifiPass } from "./index.js";
+import clipboard from "clipboardy";
+import savedWifiList from "./index.js";
 
 try {
   console.log("Getting wifi names and passwords...");
 
-  const currentName = await wifiName();
-  const currentPass = await getWifiPass();
+  const savedWifi = await savedWifiList();
 
-  const wifiNameList = await getWifiNames();
-
-  const wifiData = [
-    {
-      name: currentName,
-      value: `WIFI: ${currentName}\nPassword: ${currentPass}`,
-      description: "Password: " + currentPass,
-    },
-    ...await Promise.all(wifiNameList
-      .filter(wifiName => wifiName !== currentName)
-      .map(async (wifiName) => {
-        const wifiPass = await getWifiPass(wifiName);
-
-        return {
-          name: wifiName,
-          value: `WIFI: ${wifiName}\nPassword: ${wifiPass}`,
-          description: "Password: " + wifiPass,
-        }
-      })
-    )
-  ]
+  const wifiData = savedWifi.map((wifi) => {
+    return {
+      name: wifi.name,
+      value: wifi,
+      description: "Password: " + wifi.password,
+    }
+  })
 
   search({
-    message: 'Select WIFI name',
+    message: "Select WIFI name",
     source: async (input) => {
       try {
         if (!input) {
@@ -47,9 +34,11 @@ try {
         process.exit(1);
       }
     },
-  }).then((selectedWifiPassword) => {
+  }).then((selectedWifi) => {
 
-    console.log(selectedWifiPassword);
+    console.log(`WIFI: ${selectedWifi.name}\nPassword: ${selectedWifi.password}`);
+
+    clipboard.write(selectedWifi.password).then(() => console.log("Password copied to clipboard!"));
 
   }).catch((err) => {
     if (!err.message.toLowerCase().includes("user force closed the prompt")) {
